@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "672712785008",
+    "firebase_url": "https://xamarin-freejob.firebaseio.com",
+    "project_id": "xamarin-freejob",
+    "storage_bucket": "xamarin-freejob.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:672712785008:android:2f3d229e2b91f0ae5788b5",
+        "android_client_info": {
+          "package_name": "com.xamarin.module.notification"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "672712785008-kd3l7d9bl9d787jf7au4ei389a0dmcrv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQASnndCahG4Mj4EnSiBd4xRZ86xJ9-co"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "672712785008-kd3l7d9bl9d787jf7au4ei389a0dmcrv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
