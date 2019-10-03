@@ -4,16 +4,16 @@ using Android.OS;
 using Android.Content;
 using Android.Support.V4.App;
 
-using notification.Droid.Common;
+using Android.Util;
+using System.Collections.Generic;
 
-
-namespace notification.Droid.Notification
+namespace notification.Droid
 {
-    public class NotificationMgr
+    public class NoticeMgr
     {
+        static readonly string TAG = "NoticeMgr";
         private global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity Parent { get; set; }
 
-        private Log log;
         private int Count { get; set; }
 
 
@@ -27,19 +27,15 @@ namespace notification.Droid.Notification
         private NotificationImportance Importance { get { return (IsHeadUp ? NotificationImportance.High : NotificationImportance.Low); } }
 
         #region Constructor
-        public NotificationMgr(global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity parent) : this(parent, "channelId_default", "channelName_default", 1)
+        public NoticeMgr(global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity parent) : this(parent, "channelId_default", "channelName_default", 1)
         {
         }
 
-        public NotificationMgr(global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity parent, string channelId, string channelName, int notifyId, bool bHeadUp = true)
+        public NoticeMgr(global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity parent, string channelId, string channelName, int notifyId, bool bHeadUp = true)
         {
             Parent = parent;
 
-            log = new Log("NotifiyManager");
-
-
             Count = 0;
-
 
             ChannelId = channelId;
             ChannelName = channelName;
@@ -54,13 +50,24 @@ namespace notification.Droid.Notification
 
         public void Notify(string title, string body, string clickAction)
         {
+            Notify(title, body, clickAction, null);
+        }
+
+
+        public void Notify(string title, string body, string clickAction, Dictionary<string, string> data)
+        {
+            Logger.CmWrite(TAG, $"{title}, {body}, {Count}");
             Count++;
 
-            log.Write($"{title}, {body}, {Count}");
-
             var intent = new Intent(clickAction)
-                .AddFlags(ActivityFlags.ClearTop);
-
+                .AddFlags(ActivityFlags.SingleTop);
+            if (data != null)
+            {
+                foreach(string key in data.Keys)
+                {
+                    intent.PutExtra(key, data[key]);
+                }
+            }
 
             var pendingIntent = PendingIntent.GetActivity(Parent,
                                                           NotifyId,
@@ -71,9 +78,9 @@ namespace notification.Droid.Notification
                                         .SetAutoCancel(true)
                                         .SetContentIntent(pendingIntent)
                                         .SetContentTitle(title)
-                                        .SetNumber(Count)
                                         .SetPriority(Priority)
                                         .SetContentText(body);
+
             if (IconId != 0) notificationBuilder.SetSmallIcon(IconId);
 
 
@@ -81,25 +88,13 @@ namespace notification.Droid.Notification
             notificationManager.Notify(NotifyId, notificationBuilder.Build());
         }
 
-
         private void CreateNotificationChannel()
         {
             if (Build.VERSION.SdkInt < BuildVersionCodes.O)
             {
-                // Notification channels are new in API 26 (and not a part of the
-                // support library). There is no need to create a notification
-                // channel on older versions of Android.
-
-                log.Write("ACK CreateNotificationChannel NO Surpport");
+                Logger.CmWrite(TAG, "ACK CreateNotificationChannel NO Surpport");
                 return;
             }
-
-            //Context context = Parent as Context;
-            //if (context == null)
-            //{
-            //    log.Write("NAK CreateNotificationChannel IS NullContext");
-            //    return;
-            //}
 
             var channel = new NotificationChannel(ChannelId,
                                                   ChannelName,
@@ -112,7 +107,7 @@ namespace notification.Droid.Notification
             var notificationManager = (NotificationManager)(Parent.GetSystemService(Context.NotificationService));
             notificationManager.CreateNotificationChannel(channel);
 
-            log.Write($"CreateNotificationChannel, {ChannelId}, {ChannelName}");
+            Logger.CmWrite(TAG, $"CreateNotificationChannel, {ChannelId}, {ChannelName}");
         }
     }
 }

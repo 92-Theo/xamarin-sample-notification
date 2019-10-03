@@ -4,14 +4,14 @@ using System.Net;
 using System.Text;
 using Xamarin.Forms.Internals;
 
-namespace notification.FCMServer
+namespace notification.API
 {
-    public class Common
+    public class FCM
     {
         static readonly string TAG = "FCMServer.Common";
         private const string FORMAT = "{{ \"registration_ids\": [ {0} ], \"notification\": {{\"title\":\"{1}\",\"body\":\"{2}\"}}, \"delay_while_idle\" : false, \"priority\" : \"high\" }}";
 
-        public Common()
+        public FCM()
         {
         }
 

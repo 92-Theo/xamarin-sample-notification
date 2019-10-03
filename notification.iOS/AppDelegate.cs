@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Firebase.CloudMessaging;
 using Foundation;
 using UIKit;
 using UserNotifications;
+using notification.iOS.Services;
+using notification.Services;
 
 namespace notification.iOS
 {
@@ -16,8 +16,10 @@ namespace notification.iOS
                                 , IUNUserNotificationCenterDelegate
                                 , IMessagingDelegate
     {
+        private static readonly string TAG = "iOS.AppDelegate";
+
         public static AppDelegate Instance { get; private set; }
-        private App MainForm;
+        private App mainApp;
         private UserNotificationCenterDelegate UNCDelegate = new UserNotificationCenterDelegate();
 
         #region Override Func
@@ -34,14 +36,13 @@ namespace notification.iOS
             ConfigureNotification();
 
             global::Xamarin.Forms.Forms.Init();
-            MainForm = new App();
+            mainApp = new App();
 
-            MainForm.AddLocalNotify(NotifyLocal);
-            MainForm.AddTokenGet(GetToken);
-            MainForm.AppOnForeground += Foreground_Changed;
-            MainForm.AppOnBackground += Background_Changed;
-            LoadApplication(MainForm);
-
+            mainApp.AddLocalNotify(NotifyLocal);
+            mainApp.AddTokenGet(GetToken);
+            mainApp.AppOnForeground += Foreground_Changed;
+            mainApp.AppOnBackground += Background_Changed;
+            LoadApplication(mainApp);
             
             return base.FinishedLaunching(app, options);
         }
@@ -49,37 +50,23 @@ namespace notification.iOS
 
         public override void RegisteredForRemoteNotifications(UIApplication application, NSData deviceToken)
         {
-            System.Diagnostics.Debug.WriteLine("RegisteredForRemoteNotifications: " + deviceToken);
         }
 
         public override void FailedToRegisterForRemoteNotifications(UIApplication application, NSError error)
         {
-            System.Diagnostics.Debug.WriteLine("FailedToRegisterForRemoteNotifications: " + error);
         }
         // To receive notifications in foregroung on iOS 9 and below.
         // To receive notifications in background in any iOS version
         public override void DidReceiveRemoteNotification(UIApplication application, NSDictionary userInfo, Action<UIBackgroundFetchResult> completionHandler)
         {
-            System.Diagnostics.Debug.WriteLine("DidReceiveRemoteNotification: " + userInfo);
-            if (userInfo.ObjectForKey(new NSString("aps")) is NSDictionary aps)
+            if (CmFindNoticeInfo(userInfo))
             {
-                IOSNoticeClickService.Instance.Set((aps[new NSString("category")] as NSString).ToString());
+                CmRequestNoticePage();
             }
         }
 
         public override void ReceivedRemoteNotification(UIApplication application, NSDictionary userInfo)
         {
-            //NSString title = ((userInfo["aps"] as NSDictionary)["alert"] as NSDictionary)["title"] as NSString;
-            //NSString message = ((userInfo["aps"] as NSDictionary)["alert"] as NSDictionary)["body"] as NSString;
-
-            //System.Diagnostics.Debug.WriteLine("ReceivedRemoteNotification: title(" + title + "), message(" + message + ")");
-            // optionally you can send a Xamarin Forms message to 
-            // inform the Xamarin Forms Application to handle the notification
-            //MessagingCenter.Send(new MessageNotificationReceived()
-            //{
-            //    Title = title,
-            //    Message = message,
-            //}, "");
         }
         #endregion
 
@@ -96,9 +83,7 @@ namespace notification.iOS
                 {
                     Console.WriteLine(granted);
                 });
-
                 // For iOS 10 display notification (sent via APNS)
-                // UNUserNotificationCenter.Current.Delegate = this;
                 UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
             }
             else
@@ -116,8 +101,9 @@ namespace notification.iOS
             Firebase.InstanceID.InstanceId.Notifications.ObserveTokenRefresh((sender, e) =>
             {
                 var newToken = Firebase.InstanceID.InstanceId.SharedInstance.Token;
-                // if you want to send notification per user, use this token
-                System.Diagnostics.Debug.WriteLine(newToken);
+
+                IOSNoticeService.Instance.SetDeviceToken(newToken);
+                CmRefreshToken();
 
                 Messaging.SharedInstance.Connect((error) =>
                 {
@@ -132,12 +118,10 @@ namespace notification.iOS
         #endregion
 
 
-        #region Test
         public void GetToken()
         {
-            System.Diagnostics.Debug.WriteLine($"token: {Firebase.InstanceID.InstanceId.SharedInstance.Token}");
+            CmWriteForm($"token: {Firebase.InstanceID.InstanceId.SharedInstance.Token}");
         }
-
         public void NotifyLocal()
         {
             System.Diagnostics.Debug.WriteLine("Call NotifyLocal");
@@ -164,12 +148,38 @@ namespace notification.iOS
 
         }
 
-        public void WriteForm(string txt)
-        {
-            MainForm.SetTxtShow(txt);
-        }
-        #endregion
 
+        public static void CmWriteForm(string txt)
+        {
+            Instance?.mainApp.SetTxtShow(txt);
+        }
+        public static void CmRequestNoticePage()
+        {
+            Instance?.mainApp.RequestNoticePage();
+        }
+        public static void CmRefreshToken()
+        {
+            Instance?.mainApp.RefreshToken();
+        }
+        public static bool CmFindNoticeInfo(NSDictionary userInfo)
+        {
+            if (userInfo.ObjectForKey(new NSString("aps")) is NSDictionary aps)
+            {
+                IOSNoticeService.Instance.SetClickAction((aps[new NSString("category")] as NSString).ToString());
+                string myvalue = userInfo.ObjectForKey(new NSString("mykey")).ToString();
+                if (!myvalue.Equals(""))
+                {
+                    NoticeInfo info;
+                    info.action = (aps[new NSString("category")] as NSString).ToString();
+                    info.data = myvalue;
+                    CmRequestNoticePage();
+                    return true;
+                }
+                // to get body : (aps.ObjectForKey(new NSString("alert"))[new NSString("body")] as NSString).ToString()
+            }
+
+            return false;
+        }
 
         #region EventFunc
         public void Foreground_Changed()

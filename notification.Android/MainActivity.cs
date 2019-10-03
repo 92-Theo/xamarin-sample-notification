@@ -3,13 +3,13 @@
 using Android.App;
 using Android.Content.PM;
 using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 using Android.OS;
 
-using notification.Droid.Notification;
-using notification.Droid.Common;
-using Firebase.Iid;
+using System.Collections.Generic;
+using Android.Content;
+
+using notification.Services;
+using notification.Droid.Services;
 
 namespace notification.Droid
 {
@@ -19,59 +19,51 @@ namespace notification.Droid
     {
         public static MainActivity Instance { get; private set; }
 
-        private App app;
-        private NotificationMgr notifyMgr;
-        private Log log;
+        private static readonly string TAG = "Droid.MainActivity";
+        private NoticeMgr noticeMgr;
 
+        App mainApp;
         
-        #region Override
+        #region Override Func
         protected override void OnCreate(Bundle savedInstanceState)
         {
             Instance = this;
-            log = new Log("MainActivity");
-            log.Write($"OnCreate: Action: {Intent.Action}");
-            base.OnCreate(savedInstanceState);
 
+            #region Initialize
+            base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
-
-            notifyMgr = new NotificationMgr(this);
-            notifyMgr.IconId = Resource.Drawable.ic_stat_freejob_notification;
-            if (!FCMClient.Common.IsGoogleApiAvailability(this))
+            //
+            // Notifice
+            noticeMgr = new NoticeMgr(this);
+            noticeMgr.IconId = Resource.Drawable.ic_stat_freejob_notification;
+            if (!Services.Common.IsGoogleApiAvailability(this))
             {
-                log.Write("NAK IsGoogleApiAvailability");
+                Logger.CmWrite("NAK IsGoogleApiAvailability");
             }
+            #endregion
 
-            app = new App();
-            app.AddLocalNotify(NotifyLocal);
-            app.AddTokenGet(GetToken);
-            LoadApplication(app);
+            #region Load App
+            mainApp = new App();
+            mainApp.AddLocalNotify(NotifyLocal);
+            mainApp.AddTokenGet(GetToken);
+            LoadApplication(mainApp);
+            #endregion
         }
-        protected override void OnStart()
-        {
-            base.OnStart();
-            // string txt = $"{AlarmActivity.CurDebugStr}\n{(AlarmActivity.IsAlarm?"Alarm":"NO Alarm")}";
-            // app.SetTxtShow(txt);
 
-            log.Write("OnStart");
+        protected override void OnNewIntent(Intent intent)
+        {
+            base.OnNewIntent(intent);
+            Intent.SetAction(intent.Action);
+            Intent.PutExtras(intent.Extras);
         }
         protected override void OnResume()
         {
             base.OnResume();
-            
-            log.Write("OnResume");
-        }
-        protected override void OnStop()
-        {
-            base.OnStop();
-
-            log.Write("OnStop");
-        }
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-
-            log.Write("OnDestroy");
+            if (FindNoticeInfo(Intent))
+            {
+                CmRequestNoticePage();
+            }
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
@@ -83,22 +75,51 @@ namespace notification.Droid
         #endregion
 
 
-        #region Event Func
+        private bool FindNoticeInfo (Intent intent)
+        {
+            Bundle bundle = Intent.Extras;
+            if (bundle != null)
+            {
+                object myvalue = bundle.Get("mykey");
+                if (myvalue != null)
+                {
+                    NoticeInfo info;
+                    info.action = intent.Action;
+                    info.data = myvalue.ToString();
+
+                    AndroidNoticeService.Instance.SetInfo(info);
+                    return true;
+                }
+            }
+            return false;
+        }
+        
         void NotifyLocal()
         {
-            log.Write("CALL NotifyLocal");
-            notifyMgr.Notify("제목이라우", "내용인디", "MAIN");
+            Logger.CmWrite(TAG,"CALL NotifyLocal");
+            CmNotify("제목이라우", "내용인디", "MAIN", null);
         }
 
         void GetToken()
         {
-            log.Write("token: " + FirebaseInstanceId.Instance.Token);
+            mainApp.SetTxtShow($"token: {Services.Common.GetDeviceToken()}");
         }
-        #endregion
 
-        public void Notify (string title, string body, string clickAction)
+
+
+        public static void CmNotify(string title, string body, string clickAction, Dictionary<string, string> data)
         {
-            notifyMgr.Notify(title, body, clickAction);
+            Instance?.noticeMgr.Notify(title, body, clickAction, data);
+        }
+
+        public static void CmRequestNoticePage()
+        {
+            Instance?.mainApp.RequestNoticePage();
+        }
+
+        public static void CmRefreshToken()
+        {
+            Instance?.mainApp.RefreshToken();
         }
     }
 }

@@ -72,12 +72,12 @@
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FCMClient\FCMIDDService.cs" />
-    <Compile Include="FCMClient\FCMService.cs" />
-    <Compile Include="Notification\NotificationMgr.cs" />
-    <Compile Include="Common\Log.cs" />
-    <Compile Include="FCMClient\Common.cs" />
-    <Compile Include="AlarmActivity.cs" />
+    <Compile Include="NoticeMgr.cs" />
+    <Compile Include="Services\AndroidNoticeService.cs" />
+    <Compile Include="Services\FCMService.cs" />
+    <Compile Include="Services\AndroidNoticeServiceWarpper.cs" />
+    <Compile Include="Services\FCMIDDService.cs" />
+    <Compile Include="Services\Common.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -120,9 +120,6 @@
     <Folder Include="Resources\drawable-xhdpi\" />
     <Folder Include="Resources\drawable-xxhdpi\" />
     <Folder Include="Resources\drawable-xxxhdpi\" />
-    <Folder Include="FCMClient\" />
-    <Folder Include="Notification\" />
-    <Folder Include="Common\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\notification\notification.csproj">

@@ -14,7 +14,7 @@
     <PackageReference Include="Xamarin.Essentials" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="FCMServer\" />
+    <Folder Include="API\" />
     <Folder Include="Services\" />
   </ItemGroup>
 </Project>

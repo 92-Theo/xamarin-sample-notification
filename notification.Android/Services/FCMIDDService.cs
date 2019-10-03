@@ -3,7 +3,7 @@ using Android.App;
 using Firebase.Iid;
 using Android.Util;
 
-namespace notification.Droid.FCMClient
+namespace notification.Droid.Services
 {
     [Service]
     [IntentFilter(new[] { "com.google.firebase.INSTANCE_ID_EVENT" })]
@@ -15,16 +15,12 @@ namespace notification.Droid.FCMClient
         {
         }
 
-        
         public override void OnTokenRefresh()
         {
-            var refreshedToken = FirebaseInstanceId.Instance.Token;
-            Log.Debug(TAG, "Refreshed token: " + refreshedToken);
-            SendRegistrationToServer(refreshedToken);
-        }
-        void SendRegistrationToServer(string token)
-        {
-            // Add custom implementation, as needed.
+            var newToken = Common.GetDeviceToken();
+            AndroidNoticeService.Instance.SetDeviceToken(newToken);
+            Logger.CmWrite(TAG, "Device token: " + newToken);
+            MainActivity.CmRefreshToken();
         }
     }
 }

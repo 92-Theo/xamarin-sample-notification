@@ -1,15 +1,35 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace notification.Services
 {
-    public enum NoticeClick
+    public struct NoticeInfo
     {
-        None, Defalut
+        public string action;
+        public string data;
+
+        public NoticeInfo Copy()
+        {
+            NoticeInfo tmp;
+            tmp.action = action;
+            tmp.data = data;
+
+            return tmp;
+        }
+
+        public void Empty()
+        {
+            action = default(string);
+            data = default(string);
+        }
     }
 
-    public interface INoticeClickService
+    public interface INoticeService
     {
-        void Set(NoticeClick click);
-        void Set(string click);
-        NoticeClick Get();
+        void SetInfo(NoticeInfo info);
+        NoticeInfo GetInfo();
+        
+        void SetDeviceToken(string token);
+        string GetDeviceToken();
     }
 }

@@ -2,14 +2,13 @@
 using Android.Gms.Common;
 using Android.Content;
 
-using notification.Droid.Common;
+using Firebase.Iid;
 
-namespace notification.Droid.FCMClient
+namespace notification.Droid.Services
 {
     public class Common
     {
-        static readonly string TAG = "FCMClient.Common";
-        static Log log = new Log(TAG);
+        static readonly string TAG = "Services.Common";
 
         public Common()
         {
@@ -22,19 +21,24 @@ namespace notification.Droid.FCMClient
             {
                 if (GoogleApiAvailability.Instance.IsUserResolvableError(resultCode))
                 {
-                    log.Write(GoogleApiAvailability.Instance.GetErrorString(resultCode));
+                    Logger.CmWrite(TAG, GoogleApiAvailability.Instance.GetErrorString(resultCode));
                 }
                 else
                 {
-                    log.Write("This device is not supported");
+                    Logger.CmWrite(TAG, "This device is not supported");
                 }
                 return false;
             }
             else
             {
-                log.Write("Google Play Services is available.");
+                Logger.CmWrite(TAG, "Google Play Services is available.");
                 return true;
             }
+        }
+
+        public static string GetDeviceToken()
+        {
+            return FirebaseInstanceId.Instance.Token;
         }
     }
 }
