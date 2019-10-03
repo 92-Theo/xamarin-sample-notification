@@ -14,7 +14,7 @@ using notification.Droid.Services;
 namespace notification.Droid
 {
     [Activity(Label = "notification", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
-    [IntentFilter(new[] { "page1", "page2" }, Categories = new[] { "android.intent.category.DEFAULT" })]
+    [IntentFilter(new[] { "MAIN" }, Categories = new[] { "android.intent.category.DEFAULT" })]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
     {
         public static MainActivity Instance { get; private set; }
