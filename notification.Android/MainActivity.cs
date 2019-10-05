@@ -27,6 +27,7 @@ namespace notification.Droid
         #region Override Func
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            Logger.CmWrite(TAG, "OnCreate");
             Instance = this;
 
             #region Initialize
@@ -51,19 +52,38 @@ namespace notification.Droid
             #endregion
         }
 
+        protected override void OnStart()
+        {
+            Logger.CmWrite(TAG, "OnStart");
+            base.OnStart();
+        }
+
         protected override void OnNewIntent(Intent intent)
         {
+            Logger.CmWrite(TAG, "OnNewIntent");
+
             base.OnNewIntent(intent);
             Intent.SetAction(intent.Action);
-            Intent.PutExtras(intent.Extras);
+            if (intent.Extras != null)
+                Intent.PutExtras(intent.Extras);
         }
+
         protected override void OnResume()
         {
+            Logger.CmWrite(TAG, "OnResume");
             base.OnResume();
+            
+            
             if (FindNoticeInfo(Intent))
             {
                 CmRequestNoticePage();
             }
+        }
+
+        protected override void OnPause()
+        {
+            Logger.CmWrite(TAG, "OnPause");
+            base.OnPause();
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
@@ -77,7 +97,9 @@ namespace notification.Droid
 
         private bool FindNoticeInfo (Intent intent)
         {
-            Bundle bundle = Intent.Extras;
+            Logger.CmWrite(TAG, "FindNoticeInfo");
+            Bundle bundle = intent.Extras;
+            bool bRet = false;
             if (bundle != null)
             {
                 object myvalue = bundle.Get("mykey");
@@ -86,12 +108,34 @@ namespace notification.Droid
                     NoticeInfo info;
                     info.action = intent.Action;
                     info.data = myvalue.ToString();
-
+                    
                     AndroidNoticeService.Instance.SetInfo(info);
-                    return true;
+                    bRet = true;
                 }
+                // Init
+                intent.SetAction("");
+                intent.RemoveExtra("mykey");
+                ShowNoticeInfo(intent);
             }
-            return false;
+            return bRet;
+        }
+
+        private void ShowNoticeInfo (Intent intent)
+        {
+            if (intent == null) return;
+
+            Logger.CmWrite(TAG, $"action: {intent.Action}");
+            Bundle bundle = intent.Extras;
+            if (bundle == null) return;
+
+            ICollection<string> keys = bundle.KeySet();
+            foreach (string key in keys)
+            {
+                object value = bundle.Get(key);
+                if (value == null) continue;
+
+                Logger.CmWrite(TAG, $"key: {key}, value: {value.ToString()}");
+            }
         }
         
         void NotifyLocal()
@@ -102,6 +146,8 @@ namespace notification.Droid
 
         void GetToken()
         {
+            Logger.CmWrite(TAG, "GetToken");
+            Logger.CmWrite(TAG, $"token: {Services.Common.GetDeviceToken()}");
             mainApp.SetTxtShow($"token: {Services.Common.GetDeviceToken()}");
         }
 

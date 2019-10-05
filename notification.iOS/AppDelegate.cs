@@ -165,7 +165,6 @@ namespace notification.iOS
         {
             if (userInfo.ObjectForKey(new NSString("aps")) is NSDictionary aps)
             {
-                IOSNoticeService.Instance.SetClickAction((aps[new NSString("category")] as NSString).ToString());
                 string myvalue = userInfo.ObjectForKey(new NSString("mykey")).ToString();
                 if (!myvalue.Equals(""))
                 {
